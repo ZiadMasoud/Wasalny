@@ -58,7 +58,7 @@ function openDB() {
 // Seed data: always refreshes seed routes; never touches user-added ones
 async function loadSeedData() {
   try {
-    const res   = await fetch('./data.json?cb=' + Date.now());
+    const res   = await fetch('./src/data.json?cb=' + Date.now());
     const seeds = await res.json();
     const tx    = db.transaction(STORE, 'readwrite');
     const store = tx.objectStore(STORE);
