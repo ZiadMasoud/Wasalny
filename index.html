@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cairo Minibus Finder</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Cairo:wght@400;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <header>
+    <div class="logo">
+      <span class="logo-badge">EG</span>
+      <h1>Cairo Minibus</h1>
+    </div>
+    <div class="header-actions">
+      <button id="themeToggle" title="Toggle light / dark">☀</button>
+      <button id="settingsBtn" title="Settings">⚙</button>
+    </div>
+  </header>
+
+  <main>
+
+    <!-- Search Tabs -->
+    <div class="tabs">
+      <button class="tab-btn active" data-tab="bus">By Bus No.</button>
+      <button class="tab-btn" data-tab="station">By Station</button>
+      <button class="tab-btn" data-tab="fromto">From → To</button>
+    </div>
+
+    <div id="tab-bus" class="tab-pane active">
+      <div class="input-row">
+        <input type="text" id="busInput" placeholder="Bus number e.g. 82" autocomplete="off">
+        <button class="btn-primary" id="busSearchBtn">Search</button>
+      </div>
+    </div>
+
+    <div id="tab-station" class="tab-pane">
+      <div class="input-row">
+        <input type="text" id="stationInput" class="arabic-ok"
+               placeholder="Station or street name / اسم المحطة" autocomplete="off">
+        <button class="btn-primary" id="stationSearchBtn">Search</button>
+      </div>
+      <p class="hint">Shows all bus lines that pass through this station.</p>
+    </div>
+
+    <div id="tab-fromto" class="tab-pane">
+      <div class="input-row">
+        <input type="text" id="fromInput" class="arabic-ok" placeholder="From / من" autocomplete="off">
+        <button id="geoBtn" title="Detect my location">📍</button>
+      </div>
+      <div class="input-row">
+        <input type="text" id="toInput" class="arabic-ok" placeholder="To / إلى" autocomplete="off">
+        <button class="btn-primary" id="fromToSearchBtn">Search</button>
+      </div>
+      <p class="hint">Finds buses where your origin comes before your destination on the route.</p>
+    </div>
+
+    <!-- Near You -->
+    <section id="nearYouSection">
+      <div id="nearYouHeader">
+        <div>
+          <h2 class="section-title">Buses Near You</h2>
+          <p class="hint">Find lines passing through your current area.</p>
+        </div>
+        <button id="detectBtn" class="btn-outline">📍 Detect</button>
+      </div>
+      <div id="nearMap" class="hidden"></div>
+      <div id="nearResults"></div>
+    </section>
+
+    <!-- Search Results -->
+    <div id="results"></div>
+
+    <!-- Full Route Map -->
+    <div id="mapSection" class="hidden">
+      <div id="mapStatus"></div>
+      <div id="map"></div>
+    </div>
+
+  </main>
+
+  <!-- ============================================================
+       SETTINGS MODAL
+       ============================================================ -->
+  <div id="settingsModal" class="modal hidden">
+    <div class="modal-box">
+
+      <div class="modal-header">
+        <h2>Settings</h2>
+        <button id="closeSettings">✕</button>
+      </div>
+
+      <div class="modal-tabs">
+        <button class="mtab active" data-mtab="form">Add / Edit Line</button>
+        <button class="mtab" data-mtab="lines">All Lines</button>
+        <button class="mtab" data-mtab="data">Data</button>
+      </div>
+
+      <div class="modal-body">
+
+        <!-- Tab: Add / Edit -->
+        <div id="mtab-form" class="mtab-pane active">
+          <form id="lineForm" autocomplete="off">
+            <input type="hidden" id="editingId">
+
+            <div class="form-row-2">
+              <div class="form-group">
+                <label>Bus Number *</label>
+                <input type="text" id="fBusId" placeholder="e.g. 82" required>
+              </div>
+              <div class="form-group">
+                <label>Company</label>
+                <input type="text" id="fCompany" placeholder="e.g. Cairo Transport">
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label>Pricing Type *</label>
+              <div class="radio-group">
+                <label class="radio-opt">
+                  <input type="radio" name="pricingType" value="flat" checked>
+                  <span>Flat Rate</span>
+                  <small>Same price for the whole route</small>
+                </label>
+                <label class="radio-opt">
+                  <input type="radio" name="pricingType" value="staged">
+                  <span>Stage-Based</span>
+                  <small>Price changes depending on how many stops you ride</small>
+                </label>
+              </div>
+            </div>
+
+            <div id="flatPriceRow" class="form-group">
+              <label>Price (EGP) *</label>
+              <input type="number" id="fFlatPrice" placeholder="e.g. 5" min="0" step="0.5">
+            </div>
+
+            <div id="stagesBlock" class="hidden">
+              <div class="form-group-header">
+                <label>Fare Stages</label>
+                <button type="button" id="addStageBtn" class="btn-sm">+ Add Stage</button>
+              </div>
+              <div id="stagesList"></div>
+              <p class="hint">Example: "Up to 5 stops — 5 EGP" &nbsp;|&nbsp; "6 stops to end — 8 EGP"</p>
+            </div>
+
+            <div class="form-group-header" style="margin-top:16px">
+              <label>Stations * <span class="muted">(first stop → last stop)</span></label>
+              <button type="button" id="addStationBtn" class="btn-sm">+ Add Station</button>
+            </div>
+            <div id="stationsList"></div>
+            <p class="hint" style="margin-bottom:12px">
+              Use ↑ ↓ to reorder. Expand a station to set custom map coordinates if the pin appears in the wrong place.
+            </p>
+
+            <div class="form-actions">
+              <button type="submit" id="saveLineBtn" class="btn-primary">Save Line</button>
+              <button type="button" id="cancelEditBtn" class="btn-ghost hidden">Cancel Edit</button>
+            </div>
+            <p id="formMsg" class="form-msg"></p>
+          </form>
+        </div>
+
+        <!-- Tab: All Lines -->
+        <div id="mtab-lines" class="mtab-pane">
+          <div class="lines-filter">
+            <input type="text" id="filterBus" placeholder="Filter by bus number…">
+            <select id="filterCompany"><option value="">All companies</option></select>
+          </div>
+          <div id="linesList"></div>
+        </div>
+
+        <!-- Tab: Data -->
+        <div id="mtab-data" class="mtab-pane">
+          <div class="data-info">
+            <p>Local database: <strong id="routeCount">0</strong> bus lines.</p>
+            <p class="hint">
+              Seed data from <code>data.json</code> loads automatically on every visit.
+              User-added lines are stored in your browser only.
+              Pushing a new <code>data.json</code> to GitHub updates all visitors.
+            </p>
+          </div>
+
+          <div class="data-actions">
+            <button class="data-btn" id="exportBtn"><span>⬇</span> Export All Data as JSON</button>
+            <button class="data-btn" id="importBtn"><span>⬆</span> Import from JSON File</button>
+            <input type="file" id="importFile" accept=".json" class="hidden">
+            <button class="data-btn danger" id="resetBtn"><span>↺</span> Reset to Official Seed Data</button>
+          </div>
+
+          <div class="suggest-block">
+            <h3>Suggest a Line to Admin</h3>
+            <p class="hint">
+              Know a line that's missing? Export your data, or take a photo of the bus sign and email it to the admin.
+            </p>
+            <a id="suggestLink" href="#" class="btn-outline" style="margin-top:10px;display:inline-block">
+              ✉ Email Admin
+            </a>
+          </div>
+        </div>
+
+      </div><!-- /modal-body -->
+    </div><!-- /modal-box -->
+  </div><!-- /modal -->
+
+  <div id="toast" class="toast"></div>
+
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

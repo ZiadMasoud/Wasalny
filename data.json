@@ -1,0 +1,49 @@
+[
+  {
+    "id": "82",
+    "company": "Cairo Transport Authority",
+    "pricingType": "flat",
+    "flatPrice": 5,
+    "stages": [],
+    "stations": [
+      { "name": "المرج", "lat": null, "lng": null },
+      { "name": "عين شمس", "lat": null, "lng": null },
+      { "name": "مصر الجديدة", "lat": null, "lng": null },
+      { "name": "العباسية", "lat": null, "lng": null },
+      { "name": "رمسيس", "lat": null, "lng": null }
+    ],
+    "source": "seed"
+  },
+  {
+    "id": "80",
+    "company": "Cairo Transport Authority",
+    "pricingType": "staged",
+    "flatPrice": null,
+    "stages": [
+      { "label": "Up to 5 stops", "price": 5 },
+      { "label": "6 to 10 stops", "price": 8 },
+      { "label": "11 stops to end", "price": 12 }
+    ],
+    "stations": [
+      { "name": "حلوان", "lat": null, "lng": null },
+      { "name": "المعادي", "lat": null, "lng": null },
+      { "name": "العتبة", "lat": null, "lng": null },
+      { "name": "رمسيس", "lat": null, "lng": null },
+      { "name": "شبرا", "lat": null, "lng": null }
+    ],
+    "source": "seed"
+  },
+  {
+    "id": "85",
+    "company": "وراق الخضر",
+    "pricingType": "flat",
+    "flatPrice": 20,
+    "stages": [],
+    "stations": [
+      { "name": "مساكن الشروق", "lat": null, "lng": null },
+      { "name": "رمسيس", "lat": null, "lng": null },
+      { "name": "وراق الخضر", "lat": null, "lng": null }
+    ],
+    "source": "seed"
+  }
+]
